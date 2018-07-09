@@ -3,21 +3,42 @@
 <head>
   <script src="face-api.js"></script>
   <script src="commons.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmpeg/0.1/jsmpg.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css">
   <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+  <style type="text/css">
+    .selectedFaces {
+      left: 900px;
+      top: 0px;
+      margin-top: 50px;
+      position: absolute;
+    }
+
+    #selectedFaces canvas {
+      margin-top: 10px;
+      margin-left: 10px;
+    }
+
+  </style>
 </head>
 <body>
   <div id="navbar"></div>
   <div class="center-content page-container">
+    <!-- 
+      Before starting this: Use https://github.com/klonikar/node-rtsp-stream examples/livestream.js ws "some video file" 10000 288 240 file
+      Then append ?video=ws://localhost:10000 to the URL and load.
+     -->
     <div class="progress" id="loader">
       <div class="indeterminate"></div>
     </div>
     <div style="position: relative" class="margin">
-      <video src="media/bbt.mp4" onplay="onPlay(this)" id="inputVideo" autoplay muted></video>
+      <canvas id="inputVideo" width="288" height="240"></canvas>
+      <!-- video src="media/bbt.mp4" onplay="onPlay(this)" id="inputVideo" autoplay muted></video -->
       <canvas id="overlay" />
     </div>
+    <div id="facesContainer"></div>
     <div class="row side-by-side">
       <div class="row">
         <label for="minConfidence">Min Confidence:</label>
@@ -47,11 +68,30 @@
       </div>
     </div>
   </div>
+  <div class="selectedFaces" id="selectedFaces"> 
+    <h3> Selected Faces </h3>
+  </div>
+
 
   <script>
     let minConfidence = 0.7
     let modelLoaded = false
-    let result
+    let locations
+
+    function getQueryParams() {
+      var qs = window.location.search || document.location.search;
+      qs = qs.split("+").join(" ");
+
+      var params = {}, tokens,
+          re = /[?&]?([^=]+)=([^&]*)/g;
+
+      while (tokens = re.exec(qs)) {
+          params[decodeURIComponent(tokens[1])]
+              = decodeURIComponent(tokens[2]);
+      }
+
+      return params;
+    }
 
     function onIncreaseThreshold() {
       minConfidence = Math.min(faceapi.round(minConfidence + 0.1), 1.0)
@@ -78,23 +118,64 @@
       canvas.height = height
 
       const ts = Date.now()
-      result = await faceapi.locateFaces(videoEl, minConfidence)
+      const input = await faceapi.toNetInput(videoEl)
+      locations = await faceapi.locateFaces(input, minConfidence)
+      const faceImages = await faceapi.extractFaces(input.inputs[0], locations)
       displayTimeStats(Date.now() - ts)
 
-      faceapi.drawDetection('overlay', result.map(det => det.forSize(width, height)))
-      setTimeout(() => onPlay(videoEl))
+      faceapi.drawDetection('overlay', locations.map(det => det.forSize(width, height)))
+
+      // detect landmarks and get the aligned face image bounding boxes
+      const alignedFaceBoxes = await Promise.all(faceImages.map(
+        async (faceCanvas, i) => {
+          const faceLandmarks = await faceapi.detectLandmarks(faceCanvas)
+          return faceLandmarks.align(locations[i])
+        }
+      ))
+      const alignedFaceImages = await faceapi.extractFaces(input.inputs[0], alignedFaceBoxes)
+
+      // free memory for input tensors
+      input.dispose()
+
+      $('#facesContainer').empty()
+      faceImages.forEach(async (faceCanvas, i) => {
+        //$('#facesContainer').append(faceCanvas)
+        $('#facesContainer').append(alignedFaceImages[i]);
+        alignedFaceImages[i].onclick = function() {
+          return function(elem) {
+            if(elem.parentNode.id == 'facesContainer') {
+              $('#selectedFaces').append(elem);
+              $('#selectedFaces').append(document.createElement('br'));
+            }
+            else {
+              elem.nextSibling.remove();
+              elem.remove();
+            }
+          }(alignedFaceImages[i]);
+        };
+      })
+
+      setTimeout(() => onPlay(videoEl), 2000)
     }
 
     async function run() {
       await faceapi.loadFaceDetectionModel('/')
+      await faceapi.loadFaceLandmarkModel('/')
       modelLoaded = true
       onPlay($('#inputVideo').get(0))
       $('#loader').hide()
     }
 
     $(document).ready(function() {
-      renderNavBar('#navbar', 'face_detection_video')
-      run()
+      var params = getQueryParams();
+      var canvas = document.getElementById('inputVideo');
+      var client = new WebSocket(params["video"]);
+      var player = new jsmpeg(client, {
+          canvas: canvas,
+          videoBufferSize: '288*240'
+      });
+      renderNavBar('#navbar', 'face_detection_video');
+      run();
     })
   </script>
 </body>
