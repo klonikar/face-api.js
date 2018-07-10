@@ -76,7 +76,7 @@
   <script>
     let minConfidence = 0.7
     let modelLoaded = false
-    let locations
+    const scale = 1.4;
 
     function getQueryParams() {
       var qs = window.location.search || document.location.search;
@@ -119,28 +119,46 @@
 
       const ts = Date.now()
       const input = await faceapi.toNetInput(videoEl)
-      locations = await faceapi.locateFaces(input, minConfidence)
-      const faceImages = await faceapi.extractFaces(input.inputs[0], locations)
-      displayTimeStats(Date.now() - ts)
+      var locations = await faceapi.locateFaces(input, minConfidence)
 
-      faceapi.drawDetection('overlay', locations.map(det => det.forSize(width, height)))
+      locations = locations.map( l => {
+        var relativeBox = l.getBox();
+        relativeBox.x = (relativeBox.x > relativeBox.width*(scale - 1)/2 ? relativeBox.x - relativeBox.width*(scale - 1)/2 : 0.0)/l.getImageWidth();
+        relativeBox.y = (relativeBox.y > relativeBox.height*(scale - 1)/2 ? relativeBox.y - relativeBox.height*(scale - 1)/2 : 0.0)/l.getImageHeight();
+        relativeBox.width = scale*relativeBox.width/l.getImageWidth();
+        relativeBox.height = scale*relativeBox.height/l.getImageHeight();
+
+        var ret = new faceapi.FaceDetection(l.getScore(), relativeBox, { width: l.getImageWidth(), height: l.getImageHeight() }).forSize(width, height);
+        return ret; 
+      });
+
+      const faceImages = await faceapi.extractFaces(input.inputs[0], locations)
+
+      faceapi.drawDetection('overlay', locations)
 
       // detect landmarks and get the aligned face image bounding boxes
+      var landmarks = [];
       const alignedFaceBoxes = await Promise.all(faceImages.map(
         async (faceCanvas, i) => {
-          const faceLandmarks = await faceapi.detectLandmarks(faceCanvas)
-          return faceLandmarks.align(locations[i])
+          const faceLandmarks = await faceapi.detectLandmarks(faceCanvas);
+          const box = locations[i].forSize(width, height).getBox();
+          const landmarksForSize = faceLandmarks.forSize(box.width, box.height);
+          landmarks[i] = landmarksForSize;
+          // landmarks[i] = faceLandmarks;
+          return landmarksForSize.align(locations[i])
         }
       ))
       const alignedFaceImages = await faceapi.extractFaces(input.inputs[0], alignedFaceBoxes)
 
       // free memory for input tensors
       input.dispose()
+      displayTimeStats(Date.now() - ts)
 
       $('#facesContainer').empty()
       faceImages.forEach(async (faceCanvas, i) => {
         $('#facesContainer').append(faceCanvas);
         $('#facesContainer').append(alignedFaceImages[i]);
+        faceapi.drawLandmarks(faceCanvas, landmarks[i], { drawLines: true })
         var clickHandler = function(elem) {
             if(elem.parentNode.id == 'facesContainer') {
               $('#selectedFaces').append(elem);
