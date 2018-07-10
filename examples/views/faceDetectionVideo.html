@@ -139,10 +139,9 @@
 
       $('#facesContainer').empty()
       faceImages.forEach(async (faceCanvas, i) => {
-        //$('#facesContainer').append(faceCanvas)
+        $('#facesContainer').append(faceCanvas);
         $('#facesContainer').append(alignedFaceImages[i]);
-        alignedFaceImages[i].onclick = function() {
-          return function(elem) {
+        var clickHandler = function(elem) {
             if(elem.parentNode.id == 'facesContainer') {
               $('#selectedFaces').append(elem);
               $('#selectedFaces').append(document.createElement('br'));
@@ -151,11 +150,18 @@
               elem.nextSibling.remove();
               elem.remove();
             }
-          }(alignedFaceImages[i]);
+          };
+
+        alignedFaceImages[i].onclick = function() {
+          return clickHandler(alignedFaceImages[i]);
         };
+        faceCanvas.onclick = function() {
+          return clickHandler(faceCanvas);
+        };
+
       })
 
-      setTimeout(() => onPlay(videoEl), 2000)
+      setTimeout(() => onPlay(videoEl), 1000)
     }
 
     async function run() {
