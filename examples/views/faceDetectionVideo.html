@@ -158,7 +158,7 @@
       faceImages.forEach(async (faceCanvas, i) => {
         $('#facesContainer').append(faceCanvas);
         $('#facesContainer').append(alignedFaceImages[i]);
-        faceapi.drawLandmarks(faceCanvas, landmarks[i], { drawLines: true })
+        faceapi.drawLandmarks(alignedFaceImages[i], landmarks[i], { drawLines: true })
         var clickHandler = function(elem) {
             if(elem.parentNode.id == 'facesContainer') {
               $('#selectedFaces').append(elem);

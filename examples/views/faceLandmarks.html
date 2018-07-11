@@ -40,6 +40,9 @@
 
     function redraw() {
       const canvas = faceapi.createCanvasFromMedia(currentImg)
+      canvas.width += 10;
+      canvas.height += 10;
+      canvas.getContext("2d").drawImage(currentImg, 0, 0);
       $('#faceContainer').empty()
       $('#faceContainer').append(canvas)
       faceapi.drawLandmarks(canvas, landmarks, { lineWidth: drawLines ? 2 : 4, drawLines })
