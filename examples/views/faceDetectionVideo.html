@@ -20,7 +20,6 @@
       margin-top: 10px;
       margin-left: 10px;
     }
-
   </style>
 </head>
 <body>
@@ -34,7 +33,7 @@
       <div class="indeterminate"></div>
     </div>
     <div style="position: relative" class="margin">
-      <canvas id="inputVideo" width="288" height="240"></canvas>
+      <canvas id="inputVideo" ></canvas>
       <!-- video src="media/bbt.mp4" onplay="onPlay(this)" id="inputVideo" autoplay muted></video -->
       <canvas id="overlay" />
     </div>
@@ -70,6 +69,9 @@
   </div>
   <div class="selectedFaces" id="selectedFaces"> 
     <h3> Selected Faces </h3>
+    <input type="text" id="selectedFacesName" class="bold" />
+    <button class="waves-effect waves-light btn" onclick="registerFaces();" >Register</button>
+    <br/>
   </div>
 
 
@@ -91,6 +93,12 @@
       }
 
       return params;
+    }
+
+    function registerFaces() {
+      console.log("Registering selected faces as: " + document.getElementById("selectedFacesName").value);
+
+
     }
 
     function onIncreaseThreshold() {
@@ -116,6 +124,7 @@
       const canvas = $('#overlay').get(0)
       canvas.width = width
       canvas.height = height
+      $('#selectedFaces')[0].style.left = ($('#inputVideo')[0].getBoundingClientRect().right + 100) + "px";
 
       const ts = Date.now()
       const input = await faceapi.toNetInput(videoEl)
@@ -158,15 +167,21 @@
       faceImages.forEach(async (faceCanvas, i) => {
         $('#facesContainer').append(faceCanvas);
         $('#facesContainer').append(alignedFaceImages[i]);
-        faceapi.drawLandmarks(alignedFaceImages[i], landmarks[i], { drawLines: true })
+        faceapi.drawLandmarks(alignedFaceImages[i], landmarks[i], { drawLines: false })
         var clickHandler = function(elem) {
             if(elem.parentNode.id == 'facesContainer') {
-              $('#selectedFaces').append(elem);
-              $('#selectedFaces').append(document.createElement('br'));
+              var span = document.createElement("span");
+              var chk = document.createElement("input");
+              chk.setAttribute("type", "checkbox");
+              chk.setAttribute("name", "faceSelected");
+              chk.style.marginRight = "10px";
+              span.appendChild(chk);
+              span.appendChild(elem);
+              span.appendChild(document.createElement('br'));
+              $('#selectedFaces').append(span);
             }
             else {
-              elem.nextSibling.remove();
-              elem.remove();
+              elem.parentNode.remove();
             }
           };
 
@@ -195,8 +210,8 @@
       var canvas = document.getElementById('inputVideo');
       var client = new WebSocket(params["video"]);
       var player = new jsmpeg(client, {
-          canvas: canvas,
-          videoBufferSize: '288*240'
+          canvas: canvas
+
       });
       renderNavBar('#navbar', 'face_detection_video');
       run();
