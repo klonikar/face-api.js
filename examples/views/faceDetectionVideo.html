@@ -97,8 +97,11 @@
 
     function registerFaces() {
       console.log("Registering selected faces as: " + document.getElementById("selectedFacesName").value);
-
-
+      var faces = $("#selectedFaces canvas");
+      var selectedFaces = faces.filter(f => { return faces[f].style.opacity && faces[f].style.opacity == 0.5; });
+      var selectedFacesData = selectedFaces.map(f => { return selectedFaces[f].toDataURL(); });
+      console.log(selectedFacesData); 
+      selectedFaces.map(f => { selectedFaces[f].parentNode.remove(); });
     }
 
     function onIncreaseThreshold() {
@@ -171,17 +174,12 @@
         var clickHandler = function(elem) {
             if(elem.parentNode.id == 'facesContainer') {
               var span = document.createElement("span");
-              var chk = document.createElement("input");
-              chk.setAttribute("type", "checkbox");
-              chk.setAttribute("name", "faceSelected");
-              chk.style.marginRight = "10px";
-              span.appendChild(chk);
               span.appendChild(elem);
               span.appendChild(document.createElement('br'));
               $('#selectedFaces').append(span);
             }
             else {
-              elem.parentNode.remove();
+              elem.style.opacity = elem.style.opacity && elem.style.opacity != 1 ? 1 : 0.5;
             }
           };
 
