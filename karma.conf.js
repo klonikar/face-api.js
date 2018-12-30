@@ -3,7 +3,9 @@ const dataFiles = [
   'test/images/*.png',
   'test/data/*.json',
   'test/media/*.mp4',
-  'weights/**/*'
+  'weights/**/*',
+  'weights_uncompressed/**/*',
+  'weights_unused/**/*'
 ].map(pattern => ({
   pattern,
   watched: false,
@@ -12,13 +14,45 @@ const dataFiles = [
   nocache: false
 }))
 
+let exclude = (
+  process.env.UUT
+    ? [
+        'dom',
+        'faceLandmarkNet',
+        'faceRecognitionNet',
+        'ssdMobilenetv1',
+        'tinyFaceDetector',
+        'mtcnn'
+      ]
+    : []
+  )
+    .filter(ex => ex !== process.env.UUT)
+    .map(ex => `test/tests/${ex}/*.ts`)
+
+
+exclude = exclude.concat(
+  process.env.EXCLUDE_UNCOMPRESSED
+    ? ['**/*.uncompressed.test.ts']
+    : []
+)
+
+// exclude nodejs tests
+exclude = exclude.concat(['**/*.node.test.ts'])
+
+
 module.exports = function(config) {
+  const args = []
+  if (process.env.BACKEND_CPU) {
+    args.push('backend_cpu')
+  }
+
   config.set({
     frameworks: ['jasmine', 'karma-typescript'],
     files: [
       'src/**/*.ts',
       'test/**/*.ts'
     ].concat(dataFiles),
+    exclude,
     preprocessors: {
       '**/*.ts': ['karma-typescript']
     },
@@ -26,10 +60,14 @@ module.exports = function(config) {
       tsconfig: 'tsconfig.test.json'
     },
     browsers: ['Chrome'],
-    browserNoActivityTimeout: 60000,
+    browserNoActivityTimeout: 120000,
+    browserDisconnectTolerance: 3,
+    browserDisconnectTimeout : 120000,
+    captureTimeout: 60000,
     client: {
       jasmine: {
-        timeoutInterval: 30000
+        timeoutInterval: 60000,
+        args
       }
     }
   })
