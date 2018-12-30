@@ -4,19 +4,16 @@ export {
   tf
 }
 
-export * from './FullFaceDescription';
-export * from './NetInput';
-export * from './Point';
-export * from './Rect';
+export * from 'tfjs-image-recognition-base';
 
-export * from './drawing';
+export * from './classes/index';
+export * from './dom/index'
+export * from './faceLandmarkNet/index';
+export * from './faceRecognitionNet/index';
+export * from './globalApi/index';
+export * from './mtcnn/index';
+export * from './ssdMobilenetv1/index';
+export * from './tinyFaceDetector/index';
+export * from './tinyYolov2/index';
+
 export * from './euclideanDistance';
-export * from './extractFaces'
-export * from './extractFaceTensors'
-export * from './faceDetectionNet';
-export * from './faceLandmarkNet';
-export * from './faceRecognitionNet';
-export * from './globalApi';
-export * from './padToSquare';
-export * from './toNetInput';
-export * from './utils'

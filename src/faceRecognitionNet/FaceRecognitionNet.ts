@@ -1,15 +1,12 @@
 import * as tf from '@tensorflow/tfjs-core';
+import { NetInput, NeuralNetwork, normalize, TNetInput, toNetInput } from 'tfjs-image-recognition-base';
 
-import { NeuralNetwork } from '../commons/NeuralNetwork';
-import { NetInput } from '../NetInput';
-import { toNetInput } from '../toNetInput';
-import { TNetInput } from '../types';
 import { convDown } from './convLayer';
 import { extractParams } from './extractParams';
-import { loadQuantizedParams } from './loadQuantizedParams';
-import { normalize } from './normalize';
+import { extractParamsFromWeigthMap } from './extractParamsFromWeigthMap';
 import { residual, residualDown } from './residualLayer';
 import { NetParams } from './types';
+
 
 export class FaceRecognitionNet extends NeuralNetwork<NetParams> {
 
@@ -26,9 +23,10 @@ export class FaceRecognitionNet extends NeuralNetwork<NetParams> {
     }
 
     return tf.tidy(() => {
-      const batchTensor = input.toBatchTensor(150, true)
+      const batchTensor = input.toBatchTensor(150, true).toFloat()
 
-      const normalized = normalize(batchTensor)
+      const meanRgb = [122.782, 117.001, 104.298]
+      const normalized = normalize(batchTensor, meanRgb).div(tf.scalar(256)) as tf.Tensor4D
 
       let out = convDown(normalized, params.conv32_down)
       out = tf.maxPool(out, 3, 2, 'valid')
@@ -59,11 +57,11 @@ export class FaceRecognitionNet extends NeuralNetwork<NetParams> {
   }
 
   public async forward(input: TNetInput): Promise<tf.Tensor2D> {
-    return this.forwardInput(await toNetInput(input, true))
+    return this.forwardInput(await toNetInput(input))
   }
 
   public async computeFaceDescriptor(input: TNetInput): Promise<Float32Array|Float32Array[]> {
-    const netInput = await toNetInput(input, true)
+    const netInput = await toNetInput(input)
 
     const faceDescriptorTensors = tf.tidy(
       () => tf.unstack(this.forwardInput(netInput))
@@ -80,8 +78,12 @@ export class FaceRecognitionNet extends NeuralNetwork<NetParams> {
       : faceDescriptorsForBatch[0]
   }
 
-  protected loadQuantizedParams(uri: string | undefined) {
-    return loadQuantizedParams(uri)
+  protected getDefaultModelName(): string {
+    return 'face_recognition_model'
+  }
+
+  protected extractParamsFromWeigthMap(weightMap: tf.NamedTensorMap) {
+    return extractParamsFromWeigthMap(weightMap)
   }
 
   protected extractParams(weights: Float32Array) {
