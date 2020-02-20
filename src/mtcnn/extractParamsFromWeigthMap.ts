@@ -1,7 +1,6 @@
 import * as tf from '@tensorflow/tfjs-core';
-import { disposeUnusedWeightTensors, extractWeightEntryFactory, ParamMapping } from 'tfjs-image-recognition-base';
-import { ConvParams, FCParams } from 'tfjs-tiny-yolov2';
 
+import { ConvParams, disposeUnusedWeightTensors, extractWeightEntryFactory, FCParams, ParamMapping } from '../common';
 import { NetParams, ONetParams, PNetParams, RNetParams, SharedParams } from './types';
 
 function extractorsFactory(weightMap: any, paramMappings: ParamMapping[]) {

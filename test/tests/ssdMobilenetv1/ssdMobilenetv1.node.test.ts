@@ -5,9 +5,8 @@ import { expectFaceDetections } from '../../expectFaceDetections';
 import { expectFullFaceDescriptions } from '../../expectFullFaceDescriptions';
 import { expectFaceDetectionsWithLandmarks } from '../../expectFaceDetectionsWithLandmarks';
 import { expectedSsdBoxes } from './expectedBoxes';
-import { loadImage } from '../../env';
 import * as tf from '@tensorflow/tfjs-core';
-import { FullFaceDescription } from '../../../src/classes/FullFaceDescription';
+import { getTestEnv } from '../../env';
 
 describe('ssdMobilenetv1 - node', () => {
 
@@ -16,7 +15,7 @@ describe('ssdMobilenetv1 - node', () => {
   const expectedScores = [0.54, 0.81, 0.97, 0.88, 0.84, 0.61]
 
   beforeAll(async () => {
-    imgTensor = tf.fromPixels(createCanvasFromMedia(await loadImage('test/images/faces.jpg')))
+    imgTensor = tf.browser.fromPixels(createCanvasFromMedia(await getTestEnv().loadImage('test/images/faces.jpg')))
     expectedFullFaceDescriptions = await assembleExpectedFullFaceDescriptions(expectedSsdBoxes)
   })
 
@@ -90,9 +89,9 @@ describe('ssdMobilenetv1 - node', () => {
         maxDescriptorDelta: 0.2
       }
 
-      expect(result instanceof FullFaceDescription).toBe(true)
+      expect(!!result).toBeTruthy()
       expectFullFaceDescriptions(
-        [result as FullFaceDescription],
+        result ? [result] : [],
         [expectedFullFaceDescriptions[2]],
         [expectedScores[2]],
         deltas

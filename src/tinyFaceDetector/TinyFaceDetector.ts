@@ -1,9 +1,11 @@
 import * as tf from '@tensorflow/tfjs-core';
-import { ParamMapping, Point, TNetInput } from 'tfjs-image-recognition-base';
-import { ITinyYolov2Options, TinyYolov2 as TinyYolov2Base } from 'tfjs-tiny-yolov2';
-import { TinyYolov2NetParams } from 'tfjs-tiny-yolov2/build/commonjs/tinyYolov2/types';
 
-import { FaceDetection } from '../classes';
+import { FaceDetection, Point } from '../classes';
+import { ParamMapping } from '../common';
+import { TNetInput } from '../dom';
+import { ITinyYolov2Options } from '../tinyYolov2';
+import { TinyYolov2Base } from '../tinyYolov2/TinyYolov2Base';
+import { TinyYolov2NetParams } from '../tinyYolov2/types';
 import { BOX_ANCHORS, IOU_THRESHOLD, MEAN_RGB } from './const';
 
 export class TinyFaceDetector extends TinyYolov2Base {

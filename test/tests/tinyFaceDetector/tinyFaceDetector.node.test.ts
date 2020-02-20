@@ -4,10 +4,9 @@ import { TinyFaceDetectorOptions, createCanvasFromMedia } from '../../../src';
 import { expectFaceDetections } from '../../expectFaceDetections';
 import { expectFullFaceDescriptions } from '../../expectFullFaceDescriptions';
 import { expectFaceDetectionsWithLandmarks } from '../../expectFaceDetectionsWithLandmarks';
-import { expectedTinyFaceDetectorBoxes } from './expectedBoxes';
-import { loadImage } from '../../env';
+import { expectedTinyFaceDetectorBoxes } from '../../expectedTinyFaceDetectorBoxes';
 import * as tf from '@tensorflow/tfjs-core';
-import { FullFaceDescription } from '../../../src/classes/FullFaceDescription';
+import { getTestEnv } from '../../env';
 
 describe('tinyFaceDetector - node', () => {
 
@@ -16,7 +15,7 @@ describe('tinyFaceDetector - node', () => {
   const expectedScores = [0.7, 0.82, 0.93, 0.86, 0.79, 0.84]
 
   beforeAll(async () => {
-    imgTensor = tf.fromPixels(createCanvasFromMedia(await loadImage('test/images/faces.jpg')))
+    imgTensor = tf.browser.fromPixels(createCanvasFromMedia(await getTestEnv().loadImage('test/images/faces.jpg')))
     expectedFullFaceDescriptions = await assembleExpectedFullFaceDescriptions(expectedTinyFaceDetectorBoxes)
   })
 
@@ -89,9 +88,10 @@ describe('tinyFaceDetector - node', () => {
         maxLandmarksDelta: 10,
         maxDescriptorDelta: 0.2
       }
-      expect(result instanceof FullFaceDescription).toBe(true)
+
+      expect(!!result).toBeTruthy()
       expectFullFaceDescriptions(
-        [result as FullFaceDescription],
+        result ? [result] : [],
         [expectedFullFaceDescriptions[2]],
         [expectedScores[2]],
         deltas

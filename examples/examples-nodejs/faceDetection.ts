@@ -1,4 +1,6 @@
-import { canvas, faceapi, faceDetectionNet, faceDetectionOptions, saveFile } from './commons';
+import * as faceapi from 'face-api.js';
+
+import { canvas, faceDetectionNet, faceDetectionOptions, saveFile } from './commons';
 
 async function run() {
 
@@ -8,9 +10,10 @@ async function run() {
   const detections = await faceapi.detectAllFaces(img, faceDetectionOptions)
 
   const out = faceapi.createCanvasFromMedia(img) as any
-  faceapi.drawDetection(out, detections)
+  faceapi.draw.drawDetections(out, detections)
 
   saveFile('faceDetection.jpg', out.toBuffer('image/jpeg'))
+  console.log('done, saved results to out/faceDetection.jpg')
 }
 
 run()

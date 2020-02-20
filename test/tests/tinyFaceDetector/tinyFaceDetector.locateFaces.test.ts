@@ -1,15 +1,15 @@
 import * as faceapi from '../../../src';
-import { loadImage } from '../../env';
+import { getTestEnv } from '../../env';
+import { expectedTinyFaceDetectorBoxes } from '../../expectedTinyFaceDetectorBoxes';
 import { expectFaceDetections } from '../../expectFaceDetections';
-import { describeWithNets, expectAllTensorsReleased } from '../../utils';
-import { expectedTinyFaceDetectorBoxes } from './expectedBoxes';
+import { describeWithBackend, describeWithNets } from '../../utils';
 
-describe('tinyFaceDetector.locateFaces', () => {
+describeWithBackend('tinyFaceDetector.locateFaces', () => {
 
   let imgEl: HTMLImageElement
 
   beforeAll(async () => {
-    imgEl = await loadImage('test/images/faces.jpg')
+    imgEl = await getTestEnv().loadImage('test/images/faces.jpg')
   })
 
   describeWithNets('quantized weights', { withTinyFaceDetector: { quantized: true } }, ({ tinyFaceDetector }) => {

@@ -1,12 +1,7 @@
 import * as tf from '@tensorflow/tfjs-core';
-import {
-  disposeUnusedWeightTensors,
-  extractWeightEntryFactory,
-  isTensor2D,
-  loadWeightMap,
-  ParamMapping,
-} from 'tfjs-image-recognition-base';
 
+import { disposeUnusedWeightTensors, extractWeightEntryFactory, ParamMapping } from '../common';
+import { isTensor2D } from '../utils';
 import { ConvLayerParams, NetParams, ResidualLayerParams, ScaleLayerParams } from './types';
 
 function extractorsFactory(weightMap: any, paramMappings: ParamMapping[]) {

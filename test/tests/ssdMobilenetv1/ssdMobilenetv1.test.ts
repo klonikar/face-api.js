@@ -1,21 +1,20 @@
 import * as faceapi from '../../../src';
-import { describeWithNets, expectAllTensorsReleased, assembleExpectedFullFaceDescriptions, ExpectedFullFaceDescription } from '../../utils';
-import { fetchImage, SsdMobilenetv1Options } from '../../../src';
+import { describeWithNets, expectAllTensorsReleased, assembleExpectedFullFaceDescriptions, ExpectedFullFaceDescription, describeWithBackend } from '../../utils';
+import { SsdMobilenetv1Options } from '../../../src';
 import { expectFaceDetections } from '../../expectFaceDetections';
 import { expectFullFaceDescriptions } from '../../expectFullFaceDescriptions';
 import { expectFaceDetectionsWithLandmarks } from '../../expectFaceDetectionsWithLandmarks';
 import { expectedSsdBoxes } from './expectedBoxes';
-import { loadImage } from '../../env';
-import { FullFaceDescription } from '../../../src/classes/FullFaceDescription';
+import { getTestEnv } from '../../env';
 
-describe('ssdMobilenetv1', () => {
+describeWithBackend('ssdMobilenetv1', () => {
 
   let imgEl: HTMLImageElement
   let expectedFullFaceDescriptions: ExpectedFullFaceDescription[]
   const expectedScores = [0.54, 0.81, 0.97, 0.88, 0.84, 0.61]
 
   beforeAll(async () => {
-    imgEl = await loadImage('test/images/faces.jpg')
+    imgEl = await getTestEnv().loadImage('test/images/faces.jpg')
     expectedFullFaceDescriptions = await assembleExpectedFullFaceDescriptions(expectedSsdBoxes)
   })
 
@@ -46,7 +45,7 @@ describe('ssdMobilenetv1', () => {
       const deltas = {
         maxScoreDelta: 0.05,
         maxBoxDelta: 5,
-        maxLandmarksDelta: 2
+        maxLandmarksDelta: 3
       }
       expect(results.length).toEqual(6)
       expectFaceDetectionsWithLandmarks(results, expectedFullFaceDescriptions, expectedScores, deltas)
@@ -65,7 +64,7 @@ describe('ssdMobilenetv1', () => {
       const deltas = {
         maxScoreDelta: 0.05,
         maxBoxDelta: 5,
-        maxLandmarksDelta: 2,
+        maxLandmarksDelta: 3,
         maxDescriptorDelta: 0.2
       }
       expect(results.length).toEqual(6)
@@ -85,13 +84,13 @@ describe('ssdMobilenetv1', () => {
       const deltas = {
         maxScoreDelta: 0.05,
         maxBoxDelta: 5,
-        maxLandmarksDelta: 2,
+        maxLandmarksDelta: 3,
         maxDescriptorDelta: 0.2
       }
 
-      expect(result instanceof FullFaceDescription).toBe(true)
+      expect(!!result).toBeTruthy()
       expectFullFaceDescriptions(
-        [result as FullFaceDescription],
+        result ? [result] : [],
         [expectedFullFaceDescriptions[2]],
         [expectedScores[2]],
         deltas

@@ -28,7 +28,6 @@
         <select id="selectFaceDetector">
           <option value="ssd_mobilenetv1">SSD Mobilenet V1</option>
           <option value="tiny_face_detector">Tiny Face Detector</option>
-          <option value="mtcnn">MTCNN</option>
         </select>
         <label>Select Face Detector</label>
       </div>
@@ -107,29 +106,6 @@
     </span>
     <!-- tiny_face_detector_controls -->
 
-    <!-- mtcnn_controls -->
-    <span id="mtcnn_controls">
-      <div class="row side-by-side">
-        <div class="row">
-          <label for="minFaceSize">Minimum Face Size:</label>
-          <input disabled value="20" id="minFaceSize" type="text" class="bold">
-        </div>
-        <button
-          class="waves-effect waves-light btn"
-          onclick="onDecreaseMinFaceSize()"
-        >
-          <i class="material-icons left">-</i>
-        </button>
-        <button
-          class="waves-effect waves-light btn"
-          onclick="onIncreaseMinFaceSize()"
-        >
-          <i class="material-icons left">+</i>
-        </button>
-      </div>
-    </span>
-    <!-- mtcnn_controls -->
-
   </div>
 
   <script>
@@ -150,9 +126,7 @@
 
     function displayExtractedFaces(faceImages) {
       const canvas = $('#overlay').get(0)
-      const { width, height } = $('#inputImg').get(0)
-      canvas.width = width
-      canvas.height = height
+      faceapi.matchDimensions(canvas, $('#inputImg').get(0))
 
       $('#facesContainer').empty()
       faceImages.forEach(canvas => $('#facesContainer').append(canvas))

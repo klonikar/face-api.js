@@ -1,7 +1,9 @@
 import * as tf from '@tensorflow/tfjs-core';
-import { NetInput, NeuralNetwork, Rect, TNetInput, toNetInput } from 'tfjs-image-recognition-base';
 
+import { Rect } from '../classes';
 import { FaceDetection } from '../classes/FaceDetection';
+import { NetInput, TNetInput, toNetInput } from '../dom';
+import { NeuralNetwork } from '../NeuralNetwork';
 import { extractParams } from './extractParams';
 import { extractParamsFromWeigthMap } from './extractParamsFromWeigthMap';
 import { mobileNetV1 } from './mobileNetV1';
@@ -85,15 +87,16 @@ export class SsdMobilenetv1 extends NeuralNetwork<NetParams> {
     const padX = inputSize / reshapedDims.width
     const padY = inputSize / reshapedDims.height
 
+    const boxesData = boxes.arraySync()
     const results = indices
       .map(idx => {
         const [top, bottom] = [
-          Math.max(0, boxes.get(idx, 0)),
-          Math.min(1.0, boxes.get(idx, 2))
+          Math.max(0, boxesData[idx][0]),
+          Math.min(1.0, boxesData[idx][2])
         ].map(val => val * padY)
         const [left, right] = [
-          Math.max(0, boxes.get(idx, 1)),
-          Math.min(1.0, boxes.get(idx, 3))
+          Math.max(0, boxesData[idx][1]),
+          Math.min(1.0, boxesData[idx][3])
         ].map(val => val * padX)
         return new FaceDetection(
           scoresData[idx],

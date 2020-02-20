@@ -1,12 +1,7 @@
 import * as tf from '@tensorflow/tfjs-core';
-import {
-  disposeUnusedWeightTensors,
-  extractWeightEntryFactory,
-  isTensor3D,
-  ParamMapping,
-} from 'tfjs-image-recognition-base';
-import { ConvParams } from 'tfjs-tiny-yolov2';
 
+import { ConvParams, disposeUnusedWeightTensors, extractWeightEntryFactory, ParamMapping } from '../common';
+import { isTensor3D } from '../utils';
 import { BoxPredictionParams, MobileNetV1, NetParams, PointwiseConvParams, PredictionLayerParams } from './types';
 
 function extractorsFactory(weightMap: any, paramMappings: ParamMapping[]) {

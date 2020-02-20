@@ -18,11 +18,11 @@
     "suppressImplicitAnyIndexErrors": true,
     "strictNullChecks": true,
     "importHelpers": true,
+    "skipLibCheck": true,
     "outDir": "build/commonjs",
     "module": "commonjs",
     "target": "es5",
     "moduleResolution": "node",
-    "baseUrl": ".",
     "lib": ["es2015", "dom"],
     "typeRoots": [
       "typings",

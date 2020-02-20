@@ -25,8 +25,20 @@ async function requestExternalImage(imageUrl) {
 function renderNavBar(navbarId, exampleUri) {
   const examples = [
     {
-      uri: 'face_and_landmark_detection',
-      name: 'Face And Landmark Detection'
+      uri: 'face_detection',
+      name: 'Face Detection'
+    },
+    {
+      uri: 'face_landmark_detection',
+      name: 'Face Landmark Detection'
+    },
+    {
+      uri: 'face_expression_recognition',
+      name: 'Face Expression Recognition'
+    },
+    {
+      uri: 'age_and_gender_recognition',
+      name: 'Age and Gender Recognition'
     },
     {
       uri: 'face_recognition',
@@ -41,8 +53,20 @@ function renderNavBar(navbarId, exampleUri) {
       name: 'Video Face Tracking'
     },
     {
-      uri: 'webcam_face_tracking',
-      name: 'Webcam Face Tracking'
+      uri: 'webcam_face_detection',
+      name: 'Webcam Face Detection'
+    },
+    {
+      uri: 'webcam_face_landmark_detection',
+      name: 'Webcam Face Landmark Detection'
+    },
+    {
+      uri: 'webcam_face_expression_recognition',
+      name: 'Webcam Face Expression Recognition'
+    },
+    {
+      uri: 'webcam_age_and_gender_recognition',
+      name: 'Webcam Age and Gender Recognition'
     },
     {
       uri: 'bbt_face_landmark_detection',
@@ -112,7 +136,7 @@ function renderNavBar(navbarId, exampleUri) {
         li.style.background='#b0b0b0'
       }
       const a = document.createElement('a')
-      a.classList.add('waves-effect', 'waves-light')
+      a.classList.add('waves-effect', 'waves-light', 'pad-sides-sm')
       a.href = ex.uri
       const span = document.createElement('span')
       span.innerHTML = ex.name
@@ -123,7 +147,7 @@ function renderNavBar(navbarId, exampleUri) {
     })
 
   $('.button-collapse').sideNav({
-    menuWidth: 240
+    menuWidth: 260
   })
 }
 
