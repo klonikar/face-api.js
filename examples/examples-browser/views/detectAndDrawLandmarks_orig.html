@@ -2,7 +2,10 @@
 <html>
 <head>
   <script src="face-api.js"></script>
-  <script src="commons.js"></script>
+  <script src="js/bbt.js"></script>
+  <script src="js/commons.js"></script>
+  <script src="js/imageSelectionControls.js"></script>
+  <script src="js/faceDetectionControls.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css">
   <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
@@ -52,21 +55,13 @@
   </div>
 
   <script>
-    let minConfidence = 0.7
     let drawLines = true
     const scale = 1.1;
     
-    function onIncreaseMinConfidence() {
-      minConfidence = Math.min(faceapi.round(minConfidence + 0.1), 1.0)
-      $('#minConfidence').val(minConfidence)
-      updateResults()
-    }
 
-    function onDecreaseMinConfidence() {
-      minConfidence = Math.max(faceapi.round(minConfidence - 0.1), 0.1)
-      $('#minConfidence').val(minConfidence)
-      updateResults()
-    }
+async function fetchImage(uri) {
+  return (await fetch(uri)).blob()
+}
 
     async function onSelectionChanged(uri) {
       const imgBuf = await fetchImage(uri)
@@ -81,42 +76,56 @@
     }
 
     async function updateResults() {
+      if (!isFaceDetectionModelLoaded()) {
+        return
+      }
+
       const inputImgEl = $('#inputImg').get(0)
-      const { width, height } = inputImgEl
+      const options = getFaceDetectorOptions()
+
+      const results = await faceapi.detectAllFaces(inputImgEl, options).withFaceLandmarks()
+      
+      //const { width, height } = inputImgEl
       const canvas = $('#overlay').get(0)
-      canvas.width = width
-      canvas.height = height
+      faceapi.matchDimensions(canvas, inputImgEl)
+      const resizedResults = faceapi.resizeResults(results, inputImgEl)
 
-      const input = await faceapi.toNetInput(inputImgEl)
-      var locations = await faceapi.locateFaces(input, minConfidence)
-      locations = locations.map( l => {
-        var relativeBox = l.getBox();
-        relativeBox.x = (relativeBox.x > relativeBox.width*(scale - 1)/2 ? relativeBox.x - relativeBox.width*(scale - 1)/2 : 0.0)/l.getImageWidth();
-        relativeBox.y = (relativeBox.y > relativeBox.height*(scale - 1)/2 ? relativeBox.y - relativeBox.height*(scale - 1)/2 : 0.0)/l.getImageHeight();
-        relativeBox.width = scale*relativeBox.width/l.getImageWidth();
-        relativeBox.height = scale*relativeBox.height/l.getImageHeight();
+      faceapi.draw.drawDetections(canvas, resizedResults)
+      faceapi.draw.drawFaceLandmarks(canvas, resizedResults)
 
-        var ret = new faceapi.FaceDetection(l.getScore(), relativeBox, { width: l.getImageWidth(), height: l.getImageHeight() }).forSize(width, height);
-        return ret; 
-      });
+      //canvas.width = width
+      //canvas.height = height
 
-      const faceTensors = (await faceapi.extractFaceTensors(input, locations))
-      let landmarksByFace = await Promise.all(faceTensors.map(t => faceapi.detectLandmarks(t)))
+      //const input = await faceapi.toNetInput(inputImgEl)
+      //var locations = await faceapi.locateFaces(input, minConfidence)
+      //locations = locations.map( l => {
+      //  var relativeBox = l.relativeBox;
+      //  relativeBox.x = (relativeBox.x > relativeBox.width*(scale - 1)/2 ? relativeBox.x - relativeBox.width*(scale - 1)/2 : 0.0)/l.imageWidth;
+      //  relativeBox.y = (relativeBox.y > relativeBox.height*(scale - 1)/2 ? relativeBox.y - relativeBox.height*(scale - 1)/2 : 0.0)/l.imageHeight;
+      //  relativeBox.width = scale*relativeBox.width/l.imageWidth;
+      //  relativeBox.height = scale*relativeBox.height/l.imageHeight;
+
+      //  var ret = new faceapi.FaceDetection(l.score, relativeBox, { width: l.imageWidth, height: l.imageHeight }).forSize(width, height);
+      //  return ret; 
+      //});
+
+      //const faceTensors = (await faceapi.extractFaceTensors(input, locations))
+      //let landmarksByFace = await Promise.all(faceTensors.map(t => faceapi.detectLandmarks(t)))
 
       // free memory for face image tensors after we computed their descriptors
-      faceTensors.forEach(t => t.dispose())
+      //faceTensors.forEach(t => t.dispose())
 
       // shift and scale the face landmarks to the face image position in the canvas
-      landmarksByFace = landmarksByFace.map((landmarks, i) => {
-        const box = locations[i].forSize(width, height).getBox()
-        return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
-      })
+      //landmarksByFace = landmarksByFace.map((landmarks, i) => {
+      //  const box = locations[i].forSize(width, height).getBox()
+      //  return landmarks.forSize(box.width, box.height).shift(box.x, box.y)
+      //})
 
-      faceapi.drawLandmarks(canvas, landmarksByFace, { lineWidth: drawLines ? 2 : 4, drawLines, color: 'red' })
-      faceapi.drawDetection('overlay', locations)
+      //new faceapi.draw.DrawFaceLandmarks(landmarksByFace, { drawLines }).draw(canvas)
+      //faceapi.drawDetection('overlay', locations)
 
       // free memory for input tensors
-      input.dispose()
+      //input.dispose()
     }
 
     async function run() {
@@ -127,7 +136,7 @@
     }
 
     $(document).ready(function() {
-      renderNavBar('#navbar', 'detect_and_draw_landmarks')
+      renderNavBar('#navbar', 'detect_and_draw_landmarks_orig')
       renderImageSelectList(
         '#selectList',
         async (uri) => {

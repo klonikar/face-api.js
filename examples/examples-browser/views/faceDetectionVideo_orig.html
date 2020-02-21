@@ -2,7 +2,10 @@
 <html>
 <head>
   <script src="face-api.js"></script>
-  <script src="commons.js"></script>
+  <script src="js/bbt.js"></script>
+  <script src="js/commons.js"></script>
+  <script src="js/imageSelectionControls.js"></script>
+  <script src="js/faceDetectionControls.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmpeg/0.1/jsmpg.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css">
@@ -33,8 +36,8 @@
       <div class="indeterminate"></div>
     </div>
     <div style="position: relative" class="margin">
-      <canvas id="inputVideo" ></canvas>
-      <!-- video src="media/bbt.mp4" onplay="onPlay(this)" id="inputVideo" autoplay muted></video -->
+      <!--canvas id="inputVideo" ></canvas-->
+      <video src="bbt.mp4" onplay="onPlay(this)" id="inputVideo" autoplay muted loop playsinline></video>
       <canvas id="overlay" />
     </div>
     <div id="facesContainer"></div>
@@ -76,7 +79,6 @@
 
 
   <script>
-    let minConfidence = 0.7
     let modelLoaded = false
     const scale = 1.4;
 
@@ -116,7 +118,7 @@
 
     function displayTimeStats(timeInMs) {
       $('#time').val(`${timeInMs} ms`)
-      $('#fps').val(`${faceapi.round(1000 / timeInMs)}`)
+      $('#fps').val(`${Math.round(1000 / timeInMs)}`)
     }
 
     async function onPlay(videoEl) {
@@ -134,43 +136,46 @@
       var locations = await faceapi.locateFaces(input, minConfidence)
 
       locations = locations.map( l => {
-        var relativeBox = l.getBox();
-        relativeBox.x = (relativeBox.x > relativeBox.width*(scale - 1)/2 ? relativeBox.x - relativeBox.width*(scale - 1)/2 : 0.0)/l.getImageWidth();
-        relativeBox.y = (relativeBox.y > relativeBox.height*(scale - 1)/2 ? relativeBox.y - relativeBox.height*(scale - 1)/2 : 0.0)/l.getImageHeight();
-        relativeBox.width = scale*relativeBox.width/l.getImageWidth();
-        relativeBox.height = scale*relativeBox.height/l.getImageHeight();
+        let x = (l.relativeBox.x > l.relativeBox.width*(scale - 1)/2 ? l.relativeBox.x - l.relativeBox.width*(scale - 1)/2 : 0.0);
+        let y = (l.relativeBox.y > l.relativeBox.height*(scale - 1)/2 ? l.relativeBox.y - l.relativeBox.height*(scale - 1)/2 : 0.0);
+        let width = scale*l.relativeBox.width;
+        let height = scale*l.relativeBox.height;
+        let relativeBox = new faceapi.Box({x: x, y: y, width: width, height: height});
 
-        var ret = new faceapi.FaceDetection(l.getScore(), relativeBox, { width: l.getImageWidth(), height: l.getImageHeight() }).forSize(width, height);
+        var ret = new faceapi.FaceDetection(l.score, relativeBox, { width: l.imageWidth, height: l.imageHeight }).forSize(width, height);
         return ret; 
       });
 
-      const faceImages = await faceapi.extractFaces(input.inputs[0], locations)
+      const faceImages = await faceapi.extractFaces(input, locations)
 
-      faceapi.drawDetection('overlay', locations)
+      faceapi.draw.drawDetections('overlay', locations)
 
       // detect landmarks and get the aligned face image bounding boxes
       var landmarks = [];
       const alignedFaceBoxes = await Promise.all(faceImages.map(
         async (faceCanvas, i) => {
           const faceLandmarks = await faceapi.detectLandmarks(faceCanvas);
-          const box = locations[i].forSize(width, height).getBox();
+          const box = locations[i].forSize(width, height).relativeBox;
           const landmarksForSize = faceLandmarks.forSize(box.width, box.height);
-          landmarks[i] = landmarksForSize;
-          // landmarks[i] = faceLandmarks;
-          return landmarksForSize.align(locations[i])
+          // landmarks[i] = landmarksForSize;
+          landmarks[i] = faceLandmarks;
+          let alignedLocations = landmarksForSize.align(locations[i]);
+          // TODO: Use alignedLocations instead of locations[i].relativeBox below. But its not working at the moment
+          let ret = new faceapi.FaceDetection(locations[i].score, locations[i].relativeBox, {width: locations[i].imageWidth, height: locations[i].imageHeight}).forSize(width, height);
+          return ret;
         }
       ))
-      const alignedFaceImages = await faceapi.extractFaces(input.inputs[0], alignedFaceBoxes)
+      const alignedFaceImages = await faceapi.extractFaces(input, alignedFaceBoxes)
 
       // free memory for input tensors
-      input.dispose()
+      //input.dispose()
       displayTimeStats(Date.now() - ts)
 
       $('#facesContainer').empty()
       faceImages.forEach(async (faceCanvas, i) => {
         $('#facesContainer').append(faceCanvas);
-        $('#facesContainer').append(alignedFaceImages[i]);
-        faceapi.drawLandmarks(alignedFaceImages[i], landmarks[i], { drawLines: false })
+        //$('#facesContainer').append(alignedFaceImages[i]);
+        //faceapi.draw.drawFaceLandmarks(alignedFaceImages[i], landmarks[i], { drawLines: false })
         var clickHandler = function(elem) {
             if(elem.parentNode.id == 'facesContainer') {
               var span = document.createElement("span");
@@ -205,13 +210,16 @@
 
     $(document).ready(function() {
       var params = getQueryParams();
-      var canvas = document.getElementById('inputVideo');
-      var client = new WebSocket(params["video"]);
+      //var canvas = document.getElementById('inputVideo');
+      var videoUrl = params["video"] ? params["video"] : "bbt.mp4";
+      /*
+      var client = new WebSocket(videoUrl);
       var player = new jsmpeg(client, {
           canvas: canvas
 
       });
-      renderNavBar('#navbar', 'face_detection_video');
+      */
+      renderNavBar('#navbar', 'face_detection_video_orig');
       run();
     })
   </script>
