@@ -21,6 +21,7 @@
       <canvas id="overlay" />
     </div>
     <div id="facesContainer"></div>
+    <div id="alignedFacesContainer"></div>
 
     <div class="row side-by-side">
       <!-- face_detector_selection_control -->
@@ -118,23 +119,32 @@
       const inputImgEl = $('#inputImg').get(0)
       const options = getFaceDetectorOptions()
 
-      const detections = await faceapi.detectAllFaces(inputImgEl, options)
-      const faceImages = await faceapi.extractFaces(inputImgEl, detections)
+      const detections = await faceapi.detectAllFaces(inputImgEl, options).withFaceLandmarks().withFaceDescriptors()
+      const alignedDetections = detections.map((det) => det.alignedRect )
+      const originalDetections = detections.map((det) => det.detection )
+      const faceImages = await faceapi.extractFaces(inputImgEl, originalDetections)
+      const alignedFaceImages = await faceapi.extractFaces(inputImgEl, alignedDetections)
 
-      displayExtractedFaces(faceImages)
+      displayExtractedFaces(faceImages, alignedFaceImages)
     }
 
-    function displayExtractedFaces(faceImages) {
+    function displayExtractedFaces(faceImages, alignedFaceImages) {
       const canvas = $('#overlay').get(0)
       faceapi.matchDimensions(canvas, $('#inputImg').get(0))
 
       $('#facesContainer').empty()
       faceImages.forEach(canvas => $('#facesContainer').append(canvas))
+
+      $('#alignedFacesContainer').empty()
+      alignedFaceImages.forEach(canvas => $('#alignedFacesContainer').append(canvas))
+
     }
 
     async function run() {
       // load face detection model
       await changeFaceDetector(selectedFaceDetector)
+      await faceapi.loadFaceLandmarkModel('/')
+      await faceapi.loadFaceRecognitionModel('/')
 
       // start processing image
       updateResults()
