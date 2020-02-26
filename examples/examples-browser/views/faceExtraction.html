@@ -34,6 +34,13 @@
       </div>
       <!-- face_detector_selection_control -->
 
+      <div class="row">
+        <label>Upload Image:</label>
+        <div>
+          <input id="imgUploadInput" type="file" class="bold" onchange="uploadImage()" accept=".jpg, .jpeg, .png">
+        </div>
+      </div>
+
       <!-- image_selection_control -->
       <div id="selectList"></div>
       <div class="row">
@@ -110,6 +117,13 @@
   </div>
 
   <script>
+
+    async function uploadImage(e) {
+      const imgFile = $('#imgUploadInput').get(0).files[0]
+      const img = await faceapi.bufferToImage(imgFile)
+      $('#inputImg').get(0).src = img.src
+      updateResults()
+    }
 
     async function updateResults() {
       if (!isFaceDetectionModelLoaded()) {
