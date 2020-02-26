@@ -1,13 +1,23 @@
-async function onSelectedImageChanged(uri) {
-  const img = await faceapi.fetchImage(uri)
-  $(`#inputImg`).get(0).src = img.src
-  updateResults()
+function onSelectedImageChanged(uri) {
+  loadImageFromUrl(uri)
 }
 
-async function loadImageFromUrl(url) {
-  const img = await requestExternalImage($('#imgUrlInput').val())
-  $('#inputImg').get(0).src = img.src
-  updateResults()
+function loadImageFromUrl(url) {
+  var img = new Image()
+  img.crossOrigin = "anonymous";
+  img.setAttribute('crossOrigin', 'anonymous');
+  img.onload = function() {
+    var canvas = document.createElement("canvas");
+    canvas.width = this.width;
+    canvas.height = this.height;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(this, 0, 0);
+    var dataURL = canvas.toDataURL("image/png");
+
+    $('#inputImg').get(0).src = dataURL
+    updateResults()
+  }
+  img.src = url || $('#imgUrlInput').val();
 }
 
 function renderImageSelectList(selectListId, onChange, initialValue, withFaceExpressionImages) {
