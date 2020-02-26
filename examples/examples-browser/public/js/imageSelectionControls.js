@@ -3,21 +3,7 @@ function onSelectedImageChanged(uri) {
 }
 
 function loadImageFromUrl(url) {
-  var img = new Image()
-  img.crossOrigin = "anonymous";
-  img.setAttribute('crossOrigin', 'anonymous');
-  img.onload = function() {
-    var canvas = document.createElement("canvas");
-    canvas.width = this.width;
-    canvas.height = this.height;
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(this, 0, 0);
-    var dataURL = canvas.toDataURL("image/png");
-
-    $('#inputImg').get(0).src = dataURL
-    updateResults()
-  }
-  img.src = url || $('#imgUrlInput').val();
+  requestExternalImage(url, '#inputImg', updateResults)
 }
 
 function renderImageSelectList(selectListId, onChange, initialValue, withFaceExpressionImages) {
