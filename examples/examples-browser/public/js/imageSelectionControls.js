@@ -6,6 +6,13 @@ function loadImageFromUrl(url) {
   requestExternalImage(url, '#inputImg', updateResults)
 }
 
+async function loadImageFromUpload() {
+    const imgFile = $('#queryImgUploadInput').get(0).files[0]
+    const img = await faceapi.bufferToImage(imgFile)
+    $('#inputImg').get(0).src = img.src
+    updateResults()
+}
+
 function renderImageSelectList(selectListId, onChange, initialValue, withFaceExpressionImages) {
   let images = [1, 2, 3, 4, 5].map(idx => `bbt${idx}.jpg`)
 
