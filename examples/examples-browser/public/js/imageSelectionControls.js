@@ -1,9 +1,13 @@
-function onSelectedImageChanged(uri) {
-  loadImageFromUrl(uri)
+async function onSelectedImageChanged(uri) {
+  const img = await faceapi.fetchImage(uri)
+  $(`#inputImg`).get(0).src = img.src
+  updateResults()
 }
 
-function loadImageFromUrl(url) {
-  requestExternalImage(url, '#inputImg', updateResults)
+async function loadImageFromUrl(url) {
+  const img = await requestExternalImage($('#imgUrlInput').val())
+  $('#inputImg').get(0).src = img.src
+  updateResults()
 }
 
 async function loadImageFromUpload() {
