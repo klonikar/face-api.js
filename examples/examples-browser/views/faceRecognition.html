@@ -161,7 +161,9 @@
     }
 
     async function loadRefImageFromUrl(url) {
-      requestExternalImage($('#refImgUrlInput').val(),'#refImg', updateReferenceImageResults)
+      const img = await requestExternalImage($('#refImgUrlInput').val())
+      $('#refImg').get(0).src = img.src
+      updateReferenceImageResults()
     }
 
     async function uploadQueryImage(e) {
@@ -172,7 +174,9 @@
     }
 
     async function loadQueryImageFromUrl(url) {
-      requestExternalImage($('#queryImgUrlInput').val(), '#queryImg', updateQueryImageResults)
+      const img = await requestExternalImage($('#queryImgUrlInput').val())
+      $('#queryImg').get(0).src = img.src
+      updateQueryImageResults()
     }
 
     async function updateReferenceImageResults() {

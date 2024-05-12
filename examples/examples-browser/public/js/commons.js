@@ -1,20 +1,25 @@
-
-function requestExternalImage(url, updateElemId, postProcFunction) {
-  var img = new Image()
-  img.crossOrigin = "anonymous";
-  img.setAttribute('crossOrigin', 'anonymous');
-  img.onload = function() {
-    var canvas = document.createElement("canvas");
-    canvas.width = this.width;
-    canvas.height = this.height;
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(this, 0, 0);
-    var dataURL = canvas.toDataURL("image/png");
-
-    $(updateElemId).get(0).src = dataURL
-    postProcFunction()
+async function requestExternalImage(imageUrl) {
+  const res = await fetch('fetch_external_image', {
+    method: 'post',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ imageUrl })
+  })
+  if (!(res.status < 400)) {
+    console.error(res.status + ' : ' + await res.text())
+    throw new Error('failed to fetch image from url: ' + imageUrl)
   }
-  img.src = url || $('#imgUrlInput').val();
+
+  let blob
+  try {
+    blob = await res.blob()
+    return await faceapi.bufferToImage(blob)
+  } catch (e) {
+    console.error('received blob:', blob)
+    console.error('error:', e)
+    throw new Error('failed to load image from url: ' + imageUrl)
+  }
 }
 
 function renderNavBar(navbarId, exampleUri) {
