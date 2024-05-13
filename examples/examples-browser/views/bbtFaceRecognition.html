@@ -3,6 +3,7 @@
 <head>
   <script src="face-api.js"></script>
   <script src="js/commons.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js"> </script>
   <script src="js/faceDetectionControls.js"></script>
   <script src="js/imageSelectionControls.js"></script>
   <script src="js/bbt.js"></script>
@@ -157,7 +158,8 @@
       await faceapi.loadFaceRecognitionModel('/')
 
       // initialize face matcher with 1 reference descriptor per bbt character
-      faceMatcher = await createBbtFaceMatcher(1)
+      await buildFacesDB(3, true)
+      faceMatcher = await createBbtFaceMatcher()
 
       // start processing image
       updateResults()
