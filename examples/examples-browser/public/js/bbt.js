@@ -80,7 +80,7 @@ async function buildFacesDB(numImagesForTraining = 1, clearDb = false) {
         let exists = await attachmentExists(db, className, attachmentId)
         if(exists) {
           console.log('Embedding exists for ' + className + ' and ' + attachmentId)
-          continue
+          //continue
         }
         console.log('Embedding will be created for ' + className + ' and ' + attachmentId)
         const img = await faceapi.fetchImage(imageUri)
