@@ -68,16 +68,11 @@ async function buildFacesDB(numImagesForTraining = 1, clearDb = false) {
         'name': className
       }
       let existingDoc = await docExists(db, className)
-      let rev = null
       if(existingDoc) {
         console.log('doc for ' + className + ' exists.', existingDoc)
-        rev = existingDoc._rev
+        doc = existingDoc
       }
-      else {
-        let resp = await db.put(doc)
-        rev = resp.rev
-        console.log('saved doc for ' + className + ', response: ', resp)
-      }
+      doc._attachments = {}
       for (let i = 1; i < (numImagesForTraining + 1); i++) {
         const imageUri = getFaceImageUri(className, i)
         let attachmentId = imageUri.split('/')[1]
@@ -87,18 +82,22 @@ async function buildFacesDB(numImagesForTraining = 1, clearDb = false) {
           console.log('Embedding exists for ' + className + ' and ' + attachmentId)
           continue
         }
-        else {
-          console.log('Embedding will be created for ' + className + ' and ' + attachmentId)
-        }
+        console.log('Embedding will be created for ' + className + ' and ' + attachmentId)
         const img = await faceapi.fetchImage(imageUri)
         let embedding = await faceapi.computeFaceDescriptor(img)
-        // Strip off "data:image/png;base64," from data url
-        let resp1 = await db.putAttachment(className, attachmentId, rev, img.src.split('base64,')[1], 'text/png')
         let embeddingType = 'application/octet-stream'
-        let resp2 = await db.putAttachment(className, embeddingAttachmentId, resp1.rev, new Blob([embedding], {'type': embeddingType}), embeddingType)
-        rev = resp2.rev
+        // Strip off "data:image/png;base64," from data url
+        doc._attachments[attachmentId] = {
+          'content_type': 'text/png',
+          'data': img.src.split('base64,')[1]
+        }
+        doc._attachments[embeddingAttachmentId] = {
+          'content_type': embeddingType,
+          'data': new Blob([embedding], {'type': embeddingType})
+        }
       }
-
+      let savedDoc = await db.put(doc)
+      console.log('Saved embedding and image: ', savedDoc)
     }
   ))
 }

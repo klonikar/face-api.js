@@ -121,6 +121,18 @@
       $('#fps').val(`${Math.round(1000 / timeInMs)}`)
     }
 
+    function faceImageClickHandler(elem) {
+        if(elem.parentNode.id == 'facesContainer') {
+          var span = document.createElement("span");
+          span.appendChild(elem);
+          span.appendChild(document.createElement('br'));
+          $('#selectedFaces').append(span);
+        }
+        else {
+          elem.style.opacity = elem.style.opacity && elem.style.opacity != 1 ? 1 : 0.5;
+        }
+      };
+
     async function onPlay(videoEl) {
       if(videoEl.paused || videoEl.ended || !modelLoaded)
         return false
@@ -176,23 +188,12 @@
         $('#facesContainer').append(faceCanvas);
         //$('#facesContainer').append(alignedFaceImages[i]);
         //faceapi.draw.drawFaceLandmarks(alignedFaceImages[i], landmarks[i], { drawLines: false })
-        var clickHandler = function(elem) {
-            if(elem.parentNode.id == 'facesContainer') {
-              var span = document.createElement("span");
-              span.appendChild(elem);
-              span.appendChild(document.createElement('br'));
-              $('#selectedFaces').append(span);
-            }
-            else {
-              elem.style.opacity = elem.style.opacity && elem.style.opacity != 1 ? 1 : 0.5;
-            }
-          };
 
         alignedFaceImages[i].onclick = function() {
-          return clickHandler(alignedFaceImages[i]);
+          return faceImageClickHandler(alignedFaceImages[i]);
         };
         faceCanvas.onclick = function() {
-          return clickHandler(faceCanvas);
+          return faceImageClickHandler(faceCanvas);
         };
 
       })
